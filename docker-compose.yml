@@ -1,0 +1,55 @@
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: swed-db
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-bankdb}
+      POSTGRES_USER: ${POSTGRES_USER:-bank}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-bank}
+    ports:
+      - "${DB_PORT:-5432}:5432"
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-bank} -d ${POSTGRES_DB:-bankdb}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - swed-net
+
+  backend:
+    build:
+      context: ./backend
+    container_name: swed-backend
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/${POSTGRES_DB:-bankdb}
+      SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER:-bank}
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-bank}
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+      APP_JWT_SECRET: ${APP_JWT_SECRET:-almost-production-jwt-secret-for-swed-app}
+    ports:
+      - "${BACKEND_PORT:-8080}:8080"
+    networks:
+      - swed-net
+
+  frontend:
+    build:
+      context: ./frontend
+    container_name: swed-frontend
+    depends_on:
+      - backend
+    ports:
+      - "${FRONTEND_PORT:-4200}:80"
+    networks:
+      - swed-net
+
+volumes:
+  db-data:
+
+networks:
+  swed-net:
+    driver: bridge

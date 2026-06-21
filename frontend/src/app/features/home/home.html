@@ -1,0 +1,19 @@
+<section class="home">
+
+  <h2 class="section-title">Your accounts</h2>
+
+  <ul class="accounts">
+    @for (account of accounts; track account.id) {
+      <li class="account">
+        <a class="account-link" [routerLink]="['/accounts', account.id]">
+          <span class="account-name">{{ account.name ?? account.number }}</span>
+          <span class="account-balance">{{ account.balance | currency: account.currency }}</span>
+        </a>
+      </li>
+    }
+  </ul>
+
+  <p class="placeholder-note">
+    Showing sample accounts — the accounts API is not implemented yet.
+  </p>
+</section>

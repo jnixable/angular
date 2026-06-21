@@ -1,0 +1,38 @@
+<section class="login">
+  <div class="login-card">
+    <h1 class="login-title">Log in</h1>
+    <p class="login-subtitle">Use your User ID and password to access your accounts.</p>
+
+    <form [formGroup]="form" (ngSubmit)="submit()" novalidate>
+      <label class="field">
+        <span class="field-label">User ID</span>
+        <input
+          type="text"
+          formControlName="pcode"
+          autocomplete="username"
+          autocapitalize="none"
+          spellcheck="false"
+          [class.invalid]="form.controls.pcode.touched && form.controls.pcode.invalid"
+        />
+      </label>
+
+      <label class="field">
+        <span class="field-label">Password</span>
+        <input
+          type="password"
+          formControlName="password"
+          autocomplete="current-password"
+          [class.invalid]="form.controls.password.touched && form.controls.password.invalid"
+        />
+      </label>
+
+      @if (error(); as err) {
+        <p class="form-error" role="alert">{{ err }}</p>
+      }
+
+      <button type="submit" class="btn-primary" [disabled]="loading()">
+        {{ loading() ? 'Logging in…' : 'Log in' }}
+      </button>
+    </form>
+  </div>
+</section>

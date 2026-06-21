@@ -1,0 +1,47 @@
+:host {
+  display: block;
+  font-family: system-ui, sans-serif;
+}
+
+.app-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid #ddd;
+
+  .brand {
+    font-weight: 700;
+    text-decoration: none;
+    color: var(--brand);
+  }
+
+  nav {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+
+    a {
+      text-decoration: none;
+      color: var(--ink);
+    }
+
+    .user {
+      color: var(--muted);
+      font-size: 0.9rem;
+    }
+
+    .link-btn {
+      border: none;
+      background: none;
+      color: var(--brand);
+      font: inherit;
+      cursor: pointer;
+      padding: 0;
+    }
+  }
+}
+
+.app-content {
+  padding: 1rem;
+}

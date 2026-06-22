@@ -6,4 +6,7 @@ public enum TxOperation {
 
   @JsonProperty("Deposit")
   DEPOSIT,
+
+  @JsonProperty("Withdraw")
+  WITHDRAW,
 }

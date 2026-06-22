@@ -14,11 +14,14 @@ import org.springframework.web.bind.annotation.RestController;
 import com.swedapp.bank.service.account.errors.AccountAccessDeniedException;
 import com.swedapp.bank.service.account.errors.AccountNotFoundException;
 import com.swedapp.bank.service.account.AccountService;
-import com.swedapp.bank.service.account.errors.DepositRejectedException;
 import com.swedapp.bank.service.account.errors.InvalidDepositException;
+import com.swedapp.bank.service.account.errors.InvalidWithdrawException;
 import com.swedapp.bank.service.account.errors.TxCheckerUnavailableException;
+import com.swedapp.bank.service.account.errors.WithdrawRejectedException;
 import com.swedapp.bank.web.dto.DepositRequest;
 import com.swedapp.bank.web.dto.DepositResponse;
+import com.swedapp.bank.web.dto.WithdrawRequest;
+import com.swedapp.bank.web.dto.WithdrawResponse;
 
 @RestController
 @RequestMapping("/api/accounts")
@@ -38,9 +41,23 @@ public class AccountController {
         result.accountNumber(), result.currency(), result.balance(), result.amount());
   }
 
+  @PostMapping("/withdraw")
+  public WithdrawResponse withdraw(@RequestBody WithdrawRequest request, Authentication authentication) {
+    var currentUserCode = authentication.getName();
+    var result = accountService.withdraw(currentUserCode, request.accountNumber(), request.amount());
+    return new WithdrawResponse(
+        result.accountNumber(), result.currency(), result.balance(), result.amount());
+  }
+
   @ExceptionHandler(InvalidDepositException.class)
   @ResponseStatus(HttpStatus.BAD_REQUEST)
   public Map<String, String> handleInvalidDeposit(InvalidDepositException ex) {
+    return Map.of("error", ex.getMessage());
+  }
+
+  @ExceptionHandler(InvalidWithdrawException.class)
+  @ResponseStatus(HttpStatus.BAD_REQUEST)
+  public Map<String, String> handleInvalidWithdraw(InvalidWithdrawException ex) {
     return Map.of("error", ex.getMessage());
   }
 
@@ -56,9 +73,9 @@ public class AccountController {
     return Map.of("error", ex.getMessage());
   }
 
-  @ExceptionHandler(DepositRejectedException.class)
+  @ExceptionHandler(WithdrawRejectedException.class)
   @ResponseStatus(HttpStatus.UNPROCESSABLE_ENTITY)
-  public Map<String, String> handleDepositRejected(DepositRejectedException ex) {
+  public Map<String, String> handleWithdrawRejected(WithdrawRejectedException ex) {
     return Map.of("error", ex.getMessage());
   }
 

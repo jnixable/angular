@@ -5,8 +5,9 @@ import java.time.Instant;
 
 import com.swedapp.bank.service.account.errors.AccountAccessDeniedException;
 import com.swedapp.bank.service.account.errors.AccountNotFoundException;
-import com.swedapp.bank.service.account.errors.DepositRejectedException;
 import com.swedapp.bank.service.account.errors.InvalidDepositException;
+import com.swedapp.bank.service.account.errors.InvalidWithdrawException;
+import com.swedapp.bank.service.account.errors.WithdrawRejectedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -22,7 +23,7 @@ import com.swedapp.bank.service.txchecker.TxOperation;
 @Service
 public class AccountService {
 
-  static final BigDecimal MAX_DEPOSIT_AMOUNT = new BigDecimal("100000000");
+  static final BigDecimal MAX_AMOUNT = new BigDecimal("100000000");
 
   private final AccountRepository accountRepository;
   private final TransactionRepository transactionRepository;
@@ -51,14 +52,6 @@ public class AccountService {
       throw new InvalidDepositException("Deposits are allowed only in EUR");
     }
 
-    TxCheckerResponse response = txCheckerClient.check(TxOperation.DEPOSIT, currency, amount);
-    if (response == null || response.status() != TxCheckerResponse.Status.APPROVED) {
-      String reason = response != null && response.message() != null
-          ? response.message()
-          : "Transaction was rejected by the transaction check service";
-      throw new DepositRejectedException(reason);
-    }
-
     var newBalance = account.getBalance().add(amount);
     account.setBalance(newBalance);
     accountRepository.save(account);
@@ -67,6 +60,44 @@ public class AccountService {
         account.getId(), TransactionType.DEPOSIT, amount, currency, null, null, Instant.now()));
 
     return new DepositResult(account.getNumber(), currency, newBalance, amount);
+  }
+
+  @Transactional
+  public WithdrawResult withdraw(String ownerCode, String accountNumber, BigDecimal amount) {
+    validateWithdrawInput(accountNumber, amount);
+
+    var account = accountRepository.findByNumber(accountNumber)
+        .orElseThrow(() -> new AccountNotFoundException(accountNumber));
+
+    if (!account.getOwnerCode().equals(ownerCode)) {
+      throw new AccountAccessDeniedException(accountNumber);
+    }
+
+    var currency = account.getCurrency();
+    if (currency != Currency.EUR) {
+      throw new InvalidWithdrawException("Withdrawals are allowed only in EUR");
+    }
+
+    if (account.getBalance().compareTo(amount) < 0) {
+      throw new InvalidWithdrawException("Insufficient funds");
+    }
+
+    TxCheckerResponse response = txCheckerClient.check(TxOperation.WITHDRAW, currency, amount);
+    if (response == null || response.status() != TxCheckerResponse.Status.APPROVED) {
+      String reason = response != null && response.message() != null
+          ? response.message()
+          : "Transaction was rejected by the transaction check service";
+      throw new WithdrawRejectedException(reason);
+    }
+
+    var newBalance = account.getBalance().subtract(amount);
+    account.setBalance(newBalance);
+    accountRepository.save(account);
+
+    transactionRepository.save(new TransactionEntity(
+        account.getId(), TransactionType.WITHDRAWAL, null, null, amount, currency, Instant.now()));
+
+    return new WithdrawResult(account.getNumber(), currency, newBalance, amount);
   }
 
   // of course, we can/should have much more validations (especially for account
@@ -78,8 +109,20 @@ public class AccountService {
     if (amount == null || amount.signum() <= 0) {
       throw new InvalidDepositException("Amount must be positive");
     }
-    if (amount.compareTo(MAX_DEPOSIT_AMOUNT) > 0) {
-      throw new InvalidDepositException("Amount must not exceed " + MAX_DEPOSIT_AMOUNT.toPlainString());
+    if (amount.compareTo(MAX_AMOUNT) > 0) {
+      throw new InvalidDepositException("Amount must not exceed " + MAX_AMOUNT.toPlainString());
+    }
+  }
+
+  private static void validateWithdrawInput(String accountNumber, BigDecimal amount) {
+    if (accountNumber == null || accountNumber.isBlank()) {
+      throw new InvalidWithdrawException("Account number is required");
+    }
+    if (amount == null || amount.signum() <= 0) {
+      throw new InvalidWithdrawException("Amount must be positive");
+    }
+    if (amount.compareTo(MAX_AMOUNT) > 0) {
+      throw new InvalidWithdrawException("Amount must not exceed " + MAX_AMOUNT.toPlainString());
     }
   }
 }

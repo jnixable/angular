@@ -44,8 +44,8 @@ public class TransactionController {
   }
 
   private static String rejectionReason(TransactionRequest request) {
-    if (request.operation() == Operation.DEPOSIT && !"EUR".equalsIgnoreCase(request.currency())) {
-      return "Deposits are allowed only in EUR";
+    if (request.operation() == Operation.WITHDRAW && !"EUR".equalsIgnoreCase(request.currency())) {
+      return "Withdrawals are allowed only in EUR";
     }
     if (request.amount().compareTo(MAX_AMOUNT) > 0) {
       return "Amount must not exceed " + MAX_AMOUNT.toPlainString();

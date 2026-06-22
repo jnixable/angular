@@ -37,6 +37,9 @@ app:
       secret: ${APP_JWT_SECRET:my-super-secured-password}
       # Token lifetime in milliseconds (default 30 minutes).
       expiration-ms: ${APP_JWT_EXPIRATION_MS:1800000}
+  tx-checker:
+    # External transaction-check service (3rd party). In docker it runs at http://tx-checker:8080.
+    base-url: ${APP_TX_CHECKER_BASE_URL:http://localhost:8081}
   exchange:
     base-currency: EUR
     rates:

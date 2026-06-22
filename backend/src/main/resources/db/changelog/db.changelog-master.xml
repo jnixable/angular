@@ -5,4 +5,7 @@
 
   <include file="changes/001-create-users-table.xml" relativeToChangelogFile="true"/>
   <include file="changes/002-seed-users.xml" relativeToChangelogFile="true"/>
+  <include file="changes/003-create-accounts-table.xml" relativeToChangelogFile="true"/>
+  <include file="changes/004-create-transactions-table.xml" relativeToChangelogFile="true"/>
+  <include file="changes/005-seed-accounts.xml" relativeToChangelogFile="true"/>
 </databaseChangeLog>

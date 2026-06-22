@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+            http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+  <changeSet id="003-create-accounts-table" author="volodymyr_lushchyk">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <tableExists tableName="accounts"/>
+      </not>
+    </preConditions>
+
+    <createTable tableName="accounts">
+      <column name="id" type="BIGINT" autoIncrement="true">
+        <constraints primaryKey="true" primaryKeyName="pk_accounts" nullable="false"/>
+      </column>
+      <column name="name" type="VARCHAR(255)">
+        <constraints nullable="true"/>
+      </column>
+      <column name="number" type="VARCHAR(255)">
+        <constraints nullable="false" unique="true" uniqueConstraintName="uk_accounts_number"/>
+      </column>
+      <column name="currency" type="VARCHAR(16)">
+        <constraints nullable="false"/>
+      </column>
+      <column name="balance" type="NUMERIC(19, 2)">
+        <constraints nullable="false"/>
+      </column>
+      <column name="owner_code" type="VARCHAR(255)">
+        <constraints nullable="false"/>
+      </column>
+    </createTable>
+
+    <addForeignKeyConstraint baseTableName="accounts" baseColumnNames="owner_code" constraintName="fk_accounts_owner_code" referencedTableName="users" referencedColumnNames="code"/>
+  </changeSet>
+</databaseChangeLog>

@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+            http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+  <changeSet id="005-seed-account-alice-eur" author="volodymyr_lushchyk">
+    <preConditions onFail="MARK_RAN">
+      <sqlCheck expectedResult="0">
+        SELECT COUNT(*) FROM accounts WHERE number = 'LVHABA0000000001'
+      </sqlCheck>
+    </preConditions>
+    <insert tableName="accounts">
+      <column name="name" value="Main EUR"/>
+      <column name="number" value="LVHABA0000000001"/>
+      <column name="currency" value="EUR"/>
+      <column name="balance" valueNumeric="1000.00"/>
+      <column name="owner_code" value="32051929971"/>
+    </insert>
+  </changeSet>
+
+  <changeSet id="006-seed-account-bob-eur" author="volodymyr_lushchyk">
+    <preConditions onFail="MARK_RAN">
+      <sqlCheck expectedResult="0">
+        SELECT COUNT(*) FROM accounts WHERE number = 'LVHABA0000000002'
+      </sqlCheck>
+    </preConditions>
+    <insert tableName="accounts">
+      <column name="name" value="My EUR"/>
+      <column name="number" value="LVHABA0000000002"/>
+      <column name="currency" value="EUR"/>
+      <column name="balance" valueNumeric="500.00"/>
+      <column name="owner_code" value="32051929972"/>
+    </insert>
+  </changeSet>
+
+  <changeSet id="007-seed-account-bob-usd" author="volodymyr_lushchyk">
+    <preConditions onFail="MARK_RAN">
+      <sqlCheck expectedResult="0">
+        SELECT COUNT(*) FROM accounts WHERE number = 'LVHABA0000000003'
+      </sqlCheck>
+    </preConditions>
+    <insert tableName="accounts">
+      <column name="name" value="My Savings USD"/>
+      <column name="number" value="LVHABA0000000003"/>
+      <column name="currency" value="USD"/>
+      <column name="balance" valueNumeric="250.00"/>
+      <column name="owner_code" value="32051929972"/>
+    </insert>
+  </changeSet>
+</databaseChangeLog>

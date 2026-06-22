@@ -47,6 +47,15 @@ services:
     networks:
       - swed-net
 
+  tx-checker:
+    build:
+      context: ./tx-checker
+    container_name: swed-tx-checker
+    ports:
+      - "${TX_CHECKER_PORT:-8081}:8080"
+    networks:
+      - swed-net
+
 volumes:
   db-data:
 

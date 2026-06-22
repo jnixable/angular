@@ -18,10 +18,10 @@ public class JpaUserDetailsService implements UserDetailsService {
     }
 
     @Override
-    public UserDetails loadUserByUsername(String pcode) throws UsernameNotFoundException {
-        var user = userRepository.findByPcode(pcode)
-                .orElseThrow(() -> new UsernameNotFoundException("No user with pcode: " + pcode));
-        return User.withUsername(user.getPcode())
+    public UserDetails loadUserByUsername(String code) throws UsernameNotFoundException {
+        var user = userRepository.findByCode(code)
+                .orElseThrow(() -> new UsernameNotFoundException("No user with code: " + code));
+        return User.withUsername(user.getCode())
                 .password(user.getPassword())
                 .authorities("ROLE_USER")
                 .build();

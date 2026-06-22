@@ -2,6 +2,9 @@ package com.swedapp.bank.web;
 
 import java.util.Map;
 
+import com.swedapp.bank.domain.EntityDetails;
+import com.swedapp.bank.domain.PersonDetails;
+import com.swedapp.bank.domain.UserDetails;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -40,18 +43,22 @@ public class UserController {
     @PostMapping("/login")
     public LoginResponse login(@RequestBody LoginRequest request) {
         var authentication = authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(request.pcode(), request.password()));
+                new UsernamePasswordAuthenticationToken(request.code(), request.password()));
         var token = jwtService.generateToken(authentication.getName());
         return new LoginResponse(token, jwtService.getExpirationMs() / 1000);
     }
 
     @GetMapping("/whoami")
     public WhoAmIResponse whoami(Authentication authentication) {
-        var user = userRepository.findByPcode(authentication.getName())
+        var userEntity = userRepository.findByCode(authentication.getName())
                 .orElseThrow(() -> new UsernameNotFoundException(
-                        "No user with pcode: " + authentication.getName()));
+                        "No user with code: " + authentication.getName()));
+        UserDetails details  = switch (userEntity.getUserType()) {
+            case Person -> new PersonDetails(userEntity.getFirstName(), userEntity.getLastName(), userEntity.getBirthday(), userEntity.getNationality());
+            case Entity -> new EntityDetails(userEntity.getCompanyName());
+        };
         return new WhoAmIResponse(
-                user.getPcode(), user.getFirstname(), user.getLastname(), user.getEmail());
+                userEntity.getUserType(), userEntity.getCode(), details, userEntity.getEmail());
     }
 
     @ExceptionHandler(AuthenticationException.class)

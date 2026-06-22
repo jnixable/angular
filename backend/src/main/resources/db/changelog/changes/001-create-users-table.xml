@@ -14,14 +14,26 @@
       <column name="id" type="BIGINT" autoIncrement="true">
         <constraints primaryKey="true" primaryKeyName="pk_users" nullable="false"/>
       </column>
-      <column name="pcode" type="VARCHAR(255)">
+      <column name="user_type" type="SMALLINT">
+        <constraints nullable="false"/>
+      </column>
+      <column name="code" type="VARCHAR(255)">
         <constraints nullable="false" unique="true" uniqueConstraintName="uk_users_pcode"/>
       </column>
-      <column name="firstname" type="VARCHAR(255)">
-        <constraints nullable="false"/>
+      <column name="first_name" type="VARCHAR(255)">
+        <constraints nullable="true"/>
       </column>
-      <column name="lastname" type="VARCHAR(255)">
-        <constraints nullable="false"/>
+      <column name="last_name" type="VARCHAR(255)">
+        <constraints nullable="true"/>
+      </column>
+      <column name="company_name" type="VARCHAR(255)">
+        <constraints nullable="true"/>
+      </column>
+      <column name="birthday" type="DATE">
+        <constraints nullable="true"/>
+      </column>
+      <column name="nationality" type="VARCHAR(255)">
+        <constraints nullable="true"/>
       </column>
       <column name="email" type="VARCHAR(255)">
         <constraints nullable="false" unique="true" uniqueConstraintName="uk_users_email"/>
@@ -30,5 +42,14 @@
         <constraints nullable="false"/>
       </column>
     </createTable>
+
+    <sql>
+      ALTER TABLE users
+        ADD CONSTRAINT ck_users_name_or_company
+        CHECK (
+          (first_name IS NOT NULL AND last_name IS NOT NULL)
+          OR company_name IS NOT NULL
+        )
+    </sql>
   </changeSet>
 </databaseChangeLog>

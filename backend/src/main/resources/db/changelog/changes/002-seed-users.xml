@@ -8,13 +8,15 @@
       <sqlCheck expectedResult="0">
           SELECT COUNT(*)
           FROM users
-          WHERE pcode = '32051929971'
+          WHERE code = '32051929971'
       </sqlCheck>
     </preConditions>
     <insert tableName="users">
-      <column name="pcode" value="32051929971"/>
-      <column name="firstname" value="Alice"/>
-      <column name="lastname" value="Andersson"/>
+      <column name="user_type" valueNumeric="0"/>
+      <column name="code" value="32051929971"/>
+      <column name="first_name" value="Alice"/>
+      <column name="last_name" value="Andersson"/>
+      <column name="birthday" valueDate="1990-01-01"/>
       <column name="email" value="alice@swedapp.com"/>
       <!-- password : alice1234 -->
       <column name="password" value="$2a$10$Eh0mQ8l8i5Tg88AsSOY98.dwugk/U34uaTjZTrpQkhHNdjhn/mFqK"/>
@@ -26,13 +28,15 @@
       <sqlCheck expectedResult="0">
         SELECT COUNT(*)
         FROM users
-        WHERE pcode = '32051929972'
+        WHERE code = '32051929972'
       </sqlCheck>
     </preConditions>
     <insert tableName="users">
-      <column name="pcode" value="32051929972"/>
-      <column name="firstname" value="Bob"/>
-      <column name="lastname" value="Bergstrom"/>
+      <column name="user_type" valueNumeric="0"/>
+      <column name="code" value="32051929972"/>
+      <column name="first_name" value="Bob"/>
+      <column name="last_name" value="Bergstrom"/>
+      <column name="birthday" valueDate="1985-06-15"/>
       <column name="email" value="bob@swedapp.com"/>
       <!-- password : bob1234 -->
       <column name="password" value="$2a$10$muerW9pK.RC2Am.j584nBepeLmfRmcI3/XqoF2Eho/0lyUHDg7xPC"/>

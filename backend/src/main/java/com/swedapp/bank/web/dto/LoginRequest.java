@@ -1,4 +1,4 @@
 package com.swedapp.bank.web.dto;
 
-public record LoginRequest(String pcode, String password) {
+public record LoginRequest(String code, String password) {
 }

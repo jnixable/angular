@@ -1,8 +1,8 @@
 <header class="app-header">
   <a class="brand" routerLink="/home">{{ title() }}</a>
   <nav>
-    @if (user(); as u) {
-      <span class="user">{{ u.firstName }} {{ u.lastName }}</span>
+    @if (user()) {
+      <span class="user">{{ displayName() }}</span>
       <button type="button" class="link-btn" (click)="logout()">Log out</button>
     } @else {
       <a routerLink="/login">Log in</a>

@@ -10,10 +10,21 @@ export interface LoginResponse {
   expiresInSeconds: number;
 }
 
+interface WhoAmIPersonDetails {
+  firstname: string;
+  lastname: string;
+  birthday: string | null;
+  nationality: string | null;
+}
+
+interface WhoAmIEntityDetails {
+  companyName: string;
+}
+
 interface WhoAmIResponse {
-  pCode: string;
-  firstName: string;
-  lastName: string;
+  userType: 'Person' | 'Entity';
+  code: string;
+  userDetails: WhoAmIPersonDetails | WhoAmIEntityDetails;
   email: string;
 }
 
@@ -22,8 +33,8 @@ export class AuthService {
   private readonly http = inject(HttpClient);
   private readonly baseUrl = `${environment.apiUrl}/user`;
 
-  login(pcode: string, password: string): Observable<LoginResponse> {
-    return this.http.post<LoginResponse>(`${this.baseUrl}/login`, { pcode, password });
+  login(code: string, password: string): Observable<LoginResponse> {
+    return this.http.post<LoginResponse>(`${this.baseUrl}/login`, { code, password });
   }
 
   whoami(token: string): Observable<User> {
@@ -31,13 +42,31 @@ export class AuthService {
       .get<WhoAmIResponse>(`${this.baseUrl}/whoami`, {
         headers: { Authorization: `Bearer ${token}` },
       })
-      .pipe(
-        map((res) => ({
-          pCode: res.pCode,
-          firstName: res.firstName,
-          lastName: res.lastName,
-          email: res.email,
-        })),
-      );
+      .pipe(map(toUser));
   }
+}
+
+function toUser(res: WhoAmIResponse): User {
+  if (res.userType === 'Person') {
+    const details = res.userDetails as WhoAmIPersonDetails;
+    return {
+      userType: 'Person',
+      code: res.code,
+      email: res.email,
+      details: {
+        firstName: details.firstname,
+        lastName: details.lastname,
+        birthday: details.birthday ?? null,
+        nationality: details.nationality ?? null,
+      },
+    };
+  }
+
+  const details = res.userDetails as WhoAmIEntityDetails;
+  return {
+    userType: 'Entity',
+    code: res.code,
+    email: res.email,
+    details: { companyName: details.companyName },
+  };
 }

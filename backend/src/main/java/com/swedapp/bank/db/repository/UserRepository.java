@@ -8,5 +8,5 @@ import com.swedapp.bank.db.entity.UserEntity;
 
 public interface UserRepository extends JpaRepository<UserEntity, Long> {
 
-    Optional<UserEntity> findByPcode(String pcode);
+    Optional<UserEntity> findByCode(String code);
 }

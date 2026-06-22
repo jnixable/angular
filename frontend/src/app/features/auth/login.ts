@@ -20,7 +20,7 @@ export class LoginPage {
   protected readonly error = toSignal(this.store.select(selectError), { initialValue: null });
 
   protected readonly form = this.fb.nonNullable.group({
-    pcode: ['', Validators.required],
+    code: ['', Validators.required],
     password: ['', Validators.required],
   });
 
@@ -29,7 +29,7 @@ export class LoginPage {
       this.form.markAllAsTouched();
       return;
     }
-    const { pcode, password } = this.form.getRawValue();
-    this.store.dispatch(AuthActions.login({ pcode, password }));
+    const { code, password } = this.form.getRawValue();
+    this.store.dispatch(AuthActions.login({ code, password }));
   }
 }

@@ -21,8 +21,8 @@ export const login$ = createEffect(
   (actions$ = inject(Actions), auth = inject(AuthService)) =>
     actions$.pipe(
       ofType(AuthActions.login),
-      switchMap(({ pcode, password }) =>
-        auth.login(pcode, password).pipe(
+      switchMap(({ code, password }) =>
+        auth.login(code, password).pipe(
           switchMap((res) =>
             auth
               .whoami(res.token)

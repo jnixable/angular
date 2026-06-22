@@ -19,12 +19,11 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 
 import com.swedapp.bank.db.entity.UserEntity;
 import com.swedapp.bank.db.repository.UserRepository;
+import com.swedapp.bank.domain.UserType;
 import com.swedapp.bank.web.dto.LoginResponse;
 
 @Import(TestcontainersConfiguration.class)
-@SpringBootTest(
-        webEnvironment = RANDOM_PORT,
-        properties = "app.security.jwt.secret=test-secret-key-with-at-least-256-bits-for-hmac-sha256")
+@SpringBootTest(webEnvironment = RANDOM_PORT, properties = "app.security.jwt.secret=test-secret-key-with-at-least-256-bits-for-hmac-sha256")
 class LoginEndpointIT {
 
     private static final String PCODE = "19900101001";
@@ -44,9 +43,13 @@ class LoginEndpointIT {
     void seedTestUser() {
         userRepository.deleteAll();
         userRepository.save(new UserEntity(
+                UserType.Person,
                 PCODE,
                 "Test",
                 "User",
+                null,
+                null,
+                null,
                 "test.user@swedapp.com",
                 passwordEncoder.encode(PASSWORD)));
     }

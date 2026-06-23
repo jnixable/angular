@@ -1,10 +1,12 @@
 package com.swedapp.bank.web;
 
+import java.util.List;
 import java.util.Map;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -18,6 +20,7 @@ import com.swedapp.bank.service.account.errors.InvalidDepositException;
 import com.swedapp.bank.service.account.errors.InvalidWithdrawException;
 import com.swedapp.bank.service.account.errors.TxCheckerUnavailableException;
 import com.swedapp.bank.service.account.errors.WithdrawRejectedException;
+import com.swedapp.bank.web.dto.AccountResponse;
 import com.swedapp.bank.web.dto.DepositRequest;
 import com.swedapp.bank.web.dto.DepositResponse;
 import com.swedapp.bank.web.dto.WithdrawRequest;
@@ -31,6 +34,15 @@ public class AccountController {
 
   public AccountController(AccountService accountService) {
     this.accountService = accountService;
+  }
+
+  @GetMapping
+  public List<AccountResponse> listAccounts(Authentication authentication) {
+    var currentUserCode = authentication.getName();
+    return accountService.listAccounts(currentUserCode).stream()
+        .map(account -> new AccountResponse(
+            account.number(), account.name(), account.currency(), account.balance()))
+        .toList();
   }
 
   @PostMapping("/deposit")

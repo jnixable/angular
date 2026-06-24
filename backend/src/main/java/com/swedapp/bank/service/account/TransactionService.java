@@ -25,7 +25,8 @@ public class TransactionService {
     @Transactional(readOnly = true)
     public Page<Transaction> getHistory(String ownerCode, String accountNumber, Pageable pageable) {
         var account = ownedAccount(ownerCode, accountNumber);
-        return transactionRepository.findByAccountIdOrderByCreatedAtDesc(account.getId(), pageable)
+        return transactionRepository
+                .findHistoryForAccount(account.getId(), pageable)
                 .map(tx -> new Transaction(
                         tx.getId(), tx.getType(), tx.getAmountIn(), tx.getCurrencyIn(),
                         tx.getAmountOut(), tx.getCurrencyOut(), tx.getCreatedAt()));

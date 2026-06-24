@@ -17,6 +17,9 @@
       <column name="account_id" type="BIGINT">
         <constraints nullable="false"/>
       </column>
+      <column name="account_to" type="BIGINT">
+        <constraints nullable="true"/>
+      </column>
       <column name="type" type="SMALLINT">
         <constraints nullable="false"/>
       </column>
@@ -38,5 +41,6 @@
     </createTable>
 
     <addForeignKeyConstraint baseTableName="transactions" baseColumnNames="account_id" constraintName="fk_transactions_account_id" referencedTableName="accounts" referencedColumnNames="id"/>
+    <addForeignKeyConstraint baseTableName="transactions" baseColumnNames="account_to" constraintName="fk_transactions_account_to" referencedTableName="accounts" referencedColumnNames="id"/>
   </changeSet>
 </databaseChangeLog>

@@ -1,21 +1,7 @@
 package com.swedapp.bank.service.account;
 
-import java.math.BigDecimal;
-import java.time.Instant;
-import java.util.List;
-
 import com.swedapp.bank.db.entity.AccountBalanceEntity;
 import com.swedapp.bank.db.entity.AccountEntity;
-import com.swedapp.bank.service.account.errors.AccountAccessDeniedException;
-import com.swedapp.bank.service.account.errors.AccountNotFoundException;
-import com.swedapp.bank.service.account.errors.InvalidDepositException;
-import com.swedapp.bank.service.account.errors.InvalidWithdrawException;
-import com.swedapp.bank.service.account.errors.WithdrawRejectedException;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.PlatformTransactionManager;
-import org.springframework.transaction.annotation.Transactional;
-import org.springframework.transaction.support.TransactionTemplate;
-
 import com.swedapp.bank.db.entity.TransactionEntity;
 import com.swedapp.bank.db.repository.AccountBalanceRepository;
 import com.swedapp.bank.db.repository.AccountRepository;
@@ -23,9 +9,18 @@ import com.swedapp.bank.db.repository.TransactionRepository;
 import com.swedapp.bank.domain.Account;
 import com.swedapp.bank.domain.AccountBalance;
 import com.swedapp.bank.domain.Currency;
+import com.swedapp.bank.service.account.errors.*;
 import com.swedapp.bank.service.txchecker.TxCheckerClient;
 import com.swedapp.bank.service.txchecker.TxCheckerResponse;
 import com.swedapp.bank.service.txchecker.TxOperation;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionTemplate;
+
+import java.math.BigDecimal;
+import java.time.Instant;
+import java.util.List;
 
 import static com.swedapp.bank.domain.TransactionType.DEPOSIT;
 import static com.swedapp.bank.domain.TransactionType.WITHDRAWAL;
@@ -79,8 +74,7 @@ public class AccountService {
     private DepositResult doDeposit(String ownerCode, String accountNumber, Currency currency, BigDecimal amount) {
         var account = ownedAccount(ownerCode, accountNumber);
 
-        var balance = accountBalanceRepository.findByAccountIdAndCurrency(account.getId(), currency)
-                .orElseGet(() -> new AccountBalanceEntity(account.getId(), currency, ZERO));
+        var balance = findOrCreateAccountBalance(account, currency);
 
         var newBalance = balance.getBalance().add(amount);
         balance.setBalance(newBalance);
@@ -100,6 +94,11 @@ public class AccountService {
                         status -> doWithdraw(ownerCode, accountNumber, currency, amount)
                 )
         );
+    }
+
+    private AccountBalanceEntity findOrCreateAccountBalance(AccountEntity account, Currency currency) {
+        return accountBalanceRepository.findByAccountIdAndCurrency(account.getId(), currency)
+                .orElseGet(() -> new AccountBalanceEntity(account.getId(), currency, ZERO));
     }
 
     private WithdrawResult doWithdraw(String ownerCode, String accountNumber, Currency currency, BigDecimal amount) {

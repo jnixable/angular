@@ -1,19 +1,20 @@
 package com.swedapp.bank.it.account;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.springframework.http.HttpStatus.OK;
-import static org.springframework.http.HttpStatus.UNAUTHORIZED;
-
-import java.util.Map;
-
 import com.swedapp.bank.domain.Currency;
 import com.swedapp.bank.it.BaseIT;
 import com.swedapp.bank.web.dto.AccountResponse;
+import com.swedapp.bank.web.dto.BalanceResponse;
 import com.swedapp.bank.web.dto.LoginResponse;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
+
+import java.util.Map;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.springframework.http.HttpStatus.OK;
+import static org.springframework.http.HttpStatus.UNAUTHORIZED;
 
 class ListAccountsEndpointIT extends BaseIT {
 
@@ -21,7 +22,7 @@ class ListAccountsEndpointIT extends BaseIT {
     private static final String ACCOUNTS_URL = "/api/accounts";
 
     @Test
-    void returnsCurrentUsersAccountsWithBalances() {
+    void returnsCurrentUsersAccountWithAllCurrencyBalances() {
         var response = restTemplate.exchange(
                 ACCOUNTS_URL, HttpMethod.GET, authorized(ALICE_CODE), AccountResponse[].class);
 
@@ -29,23 +30,31 @@ class ListAccountsEndpointIT extends BaseIT {
         assertThat(response.getBody()).isNotNull();
         assertThat(response.getBody())
                 .extracting(AccountResponse::number)
-                .containsExactlyInAnyOrder(EUR_ACCOUNT_NUMBER, USD_ACCOUNT_NUMBER);
-        assertThat(response.getBody())
-                .allSatisfy(account -> assertThat(account.balance()).isEqualByComparingTo(ACCOUNT_INITIAL_BALANCE));
+                .containsExactly(ALICE_ACCOUNT_NUMBER);
 
-        var eur = java.util.Arrays.stream(response.getBody())
-                .filter(a -> a.number().equals(EUR_ACCOUNT_NUMBER))
-                .findFirst().orElseThrow();
-        assertThat(eur.currency()).isEqualTo(Currency.EUR);
+        var account = response.getBody()[0];
+        assertThat(account.balances())
+                .extracting(BalanceResponse::currency)
+                .containsExactlyInAnyOrder(Currency.EUR, Currency.USD);
+        assertThat(account.balances())
+                .allSatisfy(balance -> assertThat(balance.balance()).isEqualByComparingTo(ACCOUNT_INITIAL_BALANCE));
     }
 
     @Test
-    void returnsEmptyListWhenUserHasNoAccounts() {
+    void returnsOnlyOwnAccounts() {
         var response = restTemplate.exchange(
                 ACCOUNTS_URL, HttpMethod.GET, authorized(BOB_CODE), AccountResponse[].class);
 
         assertThat(response.getStatusCode()).isEqualTo(OK);
-        assertThat(response.getBody()).isEmpty();
+        assertThat(response.getBody()).isNotNull();
+        assertThat(response.getBody())
+                .extracting(AccountResponse::number)
+                .containsExactly(BOB_ACCOUNT_NUMBER);
+
+        var account = response.getBody()[0];
+        assertThat(account.balances())
+                .extracting(BalanceResponse::currency)
+                .containsExactly(Currency.EUR);
     }
 
     @Test

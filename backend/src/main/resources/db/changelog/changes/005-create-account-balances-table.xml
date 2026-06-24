@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+            http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+  <changeSet id="005-create-account-balances-table" author="volodymyr_lushchyk">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <tableExists tableName="account_balances"/>
+      </not>
+    </preConditions>
+
+    <createTable tableName="account_balances">
+      <column name="id" type="BIGINT" autoIncrement="true">
+        <constraints primaryKey="true" primaryKeyName="pk_account_balances" nullable="false"/>
+      </column>
+      <column name="account_id" type="BIGINT">
+        <constraints nullable="false"/>
+      </column>
+      <column name="currency" type="VARCHAR(16)">
+        <constraints nullable="false"/>
+      </column>
+      <column name="balance" type="NUMERIC(19, 2)">
+        <constraints nullable="false"/>
+      </column>
+    </createTable>
+
+    <addForeignKeyConstraint baseTableName="account_balances" baseColumnNames="account_id" constraintName="fk_account_balances_account_id" referencedTableName="accounts" referencedColumnNames="id"/>
+    <addUniqueConstraint tableName="account_balances" columnNames="account_id, currency" constraintName="uk_account_balances_account_currency"/>
+  </changeSet>
+</databaseChangeLog>

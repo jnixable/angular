@@ -8,8 +8,10 @@ import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.support.TransactionTemplate;
 
 import com.swedapp.bank.config.ExchangeProperties;
+import com.swedapp.bank.db.entity.AccountBalanceEntity;
 import com.swedapp.bank.db.entity.AccountEntity;
 import com.swedapp.bank.db.entity.TransactionEntity;
+import com.swedapp.bank.db.repository.AccountBalanceRepository;
 import com.swedapp.bank.db.repository.AccountRepository;
 import com.swedapp.bank.db.repository.TransactionRepository;
 import com.swedapp.bank.domain.Currency;
@@ -27,15 +29,17 @@ public class ExchangeService {
     private static final int RATE_SCALE = 6;
 
     private final AccountRepository accountRepository;
+    private final AccountBalanceRepository accountBalanceRepository;
     private final TransactionRepository transactionRepository;
     private final ExchangeProperties exchangeProperties;
     private final AccountLockService accountLockService;
     private final TransactionTemplate transactionTemplate;
 
-    public ExchangeService(AccountRepository accountRepository, TransactionRepository transactionRepository,
-                           ExchangeProperties exchangeProperties, AccountLockService accountLockService,
-                           PlatformTransactionManager transactionManager) {
+    public ExchangeService(AccountRepository accountRepository, AccountBalanceRepository accountBalanceRepository,
+                           TransactionRepository transactionRepository, ExchangeProperties exchangeProperties,
+                           AccountLockService accountLockService, PlatformTransactionManager transactionManager) {
         this.accountRepository = accountRepository;
+        this.accountBalanceRepository = accountBalanceRepository;
         this.transactionRepository = transactionRepository;
         this.exchangeProperties = exchangeProperties;
         this.accountLockService = accountLockService;
@@ -43,47 +47,53 @@ public class ExchangeService {
     }
 
     // assuming there is no any fees for exchange
-    public ExchangeResult exchange(String ownerCode, String fromAccountNumber, String toAccountNumber,
-                                   BigDecimal amount) {
-        validateInput(fromAccountNumber, toAccountNumber, amount);
+    public ExchangeResult exchange(String ownerCode, String accountNumber, Currency fromCurrency,
+                                   Currency toCurrency, BigDecimal amount) {
+        validateInput(accountNumber, fromCurrency, toCurrency, amount);
 
-        return accountLockService.withLock(fromAccountNumber, () -> transactionTemplate.execute(
-                status -> doExchange(ownerCode, fromAccountNumber, toAccountNumber, amount)));
+        return accountLockService.withLock(accountNumber, () ->
+                transactionTemplate.execute(
+                        status -> doExchange(ownerCode, accountNumber, fromCurrency, toCurrency, amount)
+                )
+        );
     }
 
-    private ExchangeResult doExchange(String ownerCode, String fromAccountNumber, String toAccountNumber,
-                                      BigDecimal amount) {
-        var fromAccount = ownedAccount(ownerCode, fromAccountNumber);
-        var toAccount = ownedAccount(ownerCode, toAccountNumber);
+    private ExchangeResult doExchange(String ownerCode, String accountNumber, Currency fromCurrency,
+                                      Currency toCurrency, BigDecimal amount) {
+        var account = ownedAccount(ownerCode, accountNumber);
 
-        var fromCurrency = fromAccount.getCurrency();
-        var toCurrency = toAccount.getCurrency();
-        if (fromCurrency == toCurrency) {
-            throw new InvalidExchangeException("Source and target accounts must have different currencies");
-        }
+        var fromBalance = accountBalanceRepository.findByAccountIdAndCurrency(account.getId(), fromCurrency)
+                .orElseThrow(() -> new InvalidExchangeException("Insufficient funds"));
 
-        if (fromAccount.getBalance().compareTo(amount) < 0) {
+        if (fromBalance.getBalance().compareTo(amount) < 0) {
             throw new InvalidExchangeException("Insufficient funds");
         }
+
+        var toBalance = findOrCreateAccountBalance(account, toCurrency, amount);
 
         var rate = rate(fromCurrency, toCurrency);
         var creditedAmount = amount.multiply(rate).setScale(BALANCE_SCALE, HALF_EVEN);
 
-        var newFromBalance = fromAccount.getBalance().subtract(amount);
-        var newToBalance = toAccount.getBalance().add(creditedAmount);
-        fromAccount.setBalance(newFromBalance);
-        toAccount.setBalance(newToBalance);
-        accountRepository.save(fromAccount);
-        accountRepository.save(toAccount);
+        var newFromBalance = fromBalance.getBalance().subtract(amount);
+        var newToBalance = toBalance.getBalance().add(creditedAmount);
+        fromBalance.setBalance(newFromBalance);
+        toBalance.setBalance(newToBalance);
+        accountBalanceRepository.save(fromBalance);
+        accountBalanceRepository.save(toBalance);
 
         transactionRepository.save(new TransactionEntity(
-                fromAccount.getId(), TransactionType.EXCHANGE,
+                account.getId(), TransactionType.EXCHANGE,
                 creditedAmount, toCurrency, amount, fromCurrency, Instant.now()));
 
         return new ExchangeResult(
-                fromAccount.getNumber(), fromCurrency, newFromBalance,
-                toAccount.getNumber(), toCurrency, newToBalance,
+                account.getNumber(), fromCurrency, newFromBalance,
+                toCurrency, newToBalance,
                 amount, creditedAmount, rate);
+    }
+
+    private AccountBalanceEntity findOrCreateAccountBalance(AccountEntity account, Currency toCurrency, BigDecimal amount) {
+        return accountBalanceRepository.findByAccountIdAndCurrency(account.getId(), toCurrency)
+                .orElseGet(() -> new AccountBalanceEntity(account.getId(), toCurrency, BigDecimal.ZERO));
     }
 
     private AccountEntity ownedAccount(String ownerCode, String accountNumber) {
@@ -109,12 +119,16 @@ public class ExchangeService {
         return rate;
     }
 
-    private static void validateInput(String fromAccountNumber, String toAccountNumber, BigDecimal amount) {
-        if (fromAccountNumber == null || fromAccountNumber.isBlank()) {
-            throw new InvalidExchangeException("Source account number is required");
+    private static void validateInput(String accountNumber, Currency fromCurrency, Currency toCurrency,
+                                      BigDecimal amount) {
+        if (accountNumber == null || accountNumber.isBlank()) {
+            throw new InvalidExchangeException("Account number is required");
         }
-        if (toAccountNumber == null || toAccountNumber.isBlank()) {
-            throw new InvalidExchangeException("Target account number is required");
+        if (fromCurrency == null) {
+            throw new InvalidExchangeException("Source currency is required");
+        }
+        if (toCurrency == null) {
+            throw new InvalidExchangeException("Target currency is required");
         }
         if (amount == null || amount.signum() <= 0) {
             throw new InvalidExchangeException("Amount must be positive");
@@ -122,8 +136,8 @@ public class ExchangeService {
         if (amount.compareTo(AccountService.MAX_AMOUNT) > 0) {
             throw new InvalidExchangeException("Amount must not exceed " + AccountService.MAX_AMOUNT.toPlainString());
         }
-        if (fromAccountNumber.equals(toAccountNumber)) {
-            throw new InvalidExchangeException("Source and target accounts must be different");
+        if (fromCurrency == toCurrency) {
+            throw new InvalidExchangeException("Source and target currencies must be different");
         }
     }
 }

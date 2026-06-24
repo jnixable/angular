@@ -5,10 +5,9 @@ import java.math.BigDecimal;
 import com.swedapp.bank.domain.Currency;
 
 public record ExchangeResult(
-    String fromAccountNumber,
+    String accountNumber,
     Currency fromCurrency,
     BigDecimal fromBalance,
-    String toAccountNumber,
     Currency toCurrency,
     BigDecimal toBalance,
     BigDecimal debitedAmount,

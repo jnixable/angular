@@ -20,12 +20,6 @@
       <column name="number" type="VARCHAR(255)">
         <constraints nullable="false" unique="true" uniqueConstraintName="uk_accounts_number"/>
       </column>
-      <column name="currency" type="VARCHAR(16)">
-        <constraints nullable="false"/>
-      </column>
-      <column name="balance" type="NUMERIC(19, 2)">
-        <constraints nullable="false"/>
-      </column>
       <column name="owner_code" type="VARCHAR(255)">
         <constraints nullable="false"/>
       </column>

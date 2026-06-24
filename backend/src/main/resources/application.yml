@@ -44,6 +44,6 @@ app:
     base-currency: EUR
     rates:
       EUR: 1.00
-      USD: 1.15
+      USD: 1.14
       SEK: 11.30
       GBP: 0.85

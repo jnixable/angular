@@ -16,13 +16,18 @@ import org.springframework.web.bind.annotation.RestController;
 import com.swedapp.bank.service.account.errors.AccountAccessDeniedException;
 import com.swedapp.bank.service.account.errors.AccountNotFoundException;
 import com.swedapp.bank.service.account.AccountService;
+import com.swedapp.bank.service.account.ExchangeService;
 import com.swedapp.bank.service.account.errors.InvalidDepositException;
+import com.swedapp.bank.service.account.errors.InvalidExchangeException;
 import com.swedapp.bank.service.account.errors.InvalidWithdrawException;
+import com.swedapp.bank.service.account.errors.LockAcquisitionException;
 import com.swedapp.bank.service.account.errors.TxCheckerUnavailableException;
 import com.swedapp.bank.service.account.errors.WithdrawRejectedException;
 import com.swedapp.bank.web.dto.AccountResponse;
 import com.swedapp.bank.web.dto.DepositRequest;
 import com.swedapp.bank.web.dto.DepositResponse;
+import com.swedapp.bank.web.dto.ExchangeRequest;
+import com.swedapp.bank.web.dto.ExchangeResponse;
 import com.swedapp.bank.web.dto.WithdrawRequest;
 import com.swedapp.bank.web.dto.WithdrawResponse;
 
@@ -31,9 +36,11 @@ import com.swedapp.bank.web.dto.WithdrawResponse;
 public class AccountController {
 
   private final AccountService accountService;
+  private final ExchangeService exchangeService;
 
-  public AccountController(AccountService accountService) {
+  public AccountController(AccountService accountService, ExchangeService exchangeService) {
     this.accountService = accountService;
+    this.exchangeService = exchangeService;
   }
 
   @GetMapping
@@ -61,6 +68,17 @@ public class AccountController {
         result.accountNumber(), result.currency(), result.balance(), result.amount());
   }
 
+  @PostMapping("/exchange")
+  public ExchangeResponse exchange(@RequestBody ExchangeRequest request, Authentication authentication) {
+    var currentUserCode = authentication.getName();
+    var result = exchangeService.exchange(
+        currentUserCode, request.fromAccountNumber(), request.toAccountNumber(), request.amount());
+    return new ExchangeResponse(
+        result.fromAccountNumber(), result.fromCurrency(), result.fromBalance(),
+        result.toAccountNumber(), result.toCurrency(), result.toBalance(),
+        result.debitedAmount(), result.creditedAmount(), result.rate());
+  }
+
   @ExceptionHandler(InvalidDepositException.class)
   @ResponseStatus(HttpStatus.BAD_REQUEST)
   public Map<String, String> handleInvalidDeposit(InvalidDepositException ex) {
@@ -70,6 +88,12 @@ public class AccountController {
   @ExceptionHandler(InvalidWithdrawException.class)
   @ResponseStatus(HttpStatus.BAD_REQUEST)
   public Map<String, String> handleInvalidWithdraw(InvalidWithdrawException ex) {
+    return Map.of("error", ex.getMessage());
+  }
+
+  @ExceptionHandler(InvalidExchangeException.class)
+  @ResponseStatus(HttpStatus.BAD_REQUEST)
+  public Map<String, String> handleInvalidExchange(InvalidExchangeException ex) {
     return Map.of("error", ex.getMessage());
   }
 
@@ -94,6 +118,12 @@ public class AccountController {
   @ExceptionHandler(TxCheckerUnavailableException.class)
   @ResponseStatus(HttpStatus.SERVICE_UNAVAILABLE)
   public Map<String, String> handleTxCheckerUnavailable(TxCheckerUnavailableException ex) {
+    return Map.of("error", ex.getMessage());
+  }
+
+  @ExceptionHandler(LockAcquisitionException.class)
+  @ResponseStatus(HttpStatus.SERVICE_UNAVAILABLE)
+  public Map<String, String> handleLockAcquisition(LockAcquisitionException ex) {
     return Map.of("error", ex.getMessage());
   }
 }

@@ -6,7 +6,6 @@ import com.swedapp.bank.db.entity.TransactionEntity;
 import com.swedapp.bank.db.repository.AccountBalanceRepository;
 import com.swedapp.bank.db.repository.AccountRepository;
 import com.swedapp.bank.db.repository.TransactionRepository;
-import com.swedapp.bank.domain.Account;
 import com.swedapp.bank.domain.Currency;
 import com.swedapp.bank.domain.TransactionType;
 import com.swedapp.bank.service.account.errors.AccountAccessDeniedException;
@@ -57,8 +56,8 @@ public class TransferService {
                 : destinationAccountNumber;
         var secondLock = firstLock.equals(sourceAccountNumber) ? destinationAccountNumber : sourceAccountNumber;
 
-        return accountLockService.withLock(firstLock,
-                () -> accountLockService.withLock(secondLock, () ->
+        return accountLockService.withLock(firstLock, () ->
+                accountLockService.withLock(secondLock, () ->
                         transactionTemplate.execute(
                                 status -> doTransfer(ownerCode, sourceAccountNumber, destinationAccountNumber, currency, amount)
                         )

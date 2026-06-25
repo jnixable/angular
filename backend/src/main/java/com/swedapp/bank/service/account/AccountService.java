@@ -50,14 +50,25 @@ public class AccountService {
     }
 
     @Transactional(readOnly = true)
-    public List<AccountBalance> listAccounts(String ownerCode) {
+    public List<Account> listAccounts(String ownerCode) {
         return accountRepository.findByOwnerCode(ownerCode).stream()
-                .flatMap(account -> {
-                    var domainAccount = new Account(account.getNumber(), account.getName(), account.getOwnerCode());
-                    return accountBalanceRepository.findByAccountId(account.getId()).stream()
-                            .map(balance -> new AccountBalance(domainAccount, balance.getCurrency(), balance.getBalance()));
-                })
+                .map(account -> new Account(
+                        account.getNumber(),
+                        account.getName(),
+                        account.getOwnerCode(),
+                        accountBalanceRepository.findByAccountId(account.getId()).stream()
+                                .map(balance -> new AccountBalance(balance.getCurrency(), balance.getBalance()))
+                                .toList()))
                 .toList();
+    }
+
+    @Transactional(readOnly = true)
+    public Account getAccount(String ownerCode, String accountNumber) {
+        var account = ownedAccount(ownerCode, accountNumber);
+        var balances = accountBalanceRepository.findByAccountId(account.getId()).stream()
+                .map(balance -> new AccountBalance(balance.getCurrency(), balance.getBalance()))
+                .toList();
+        return new Account(account.getNumber(), account.getName(), account.getOwnerCode(), balances);
     }
 
     public DepositResult deposit(String ownerCode, String accountNumber, Currency currency, BigDecimal amount) {
@@ -65,8 +76,7 @@ public class AccountService {
 
         return accountLockService.withLock(accountNumber, () ->
                 transactionTemplate.execute(
-                        status -> doDeposit(ownerCode, accountNumber, currency, amount
-                        )
+                        status -> doDeposit(ownerCode, accountNumber, currency, amount)
                 )
         );
     }
@@ -157,7 +167,8 @@ public class AccountService {
         }
     }
 
-    // of course, we can/should have much more validations but let's skip it for simplicity
+    // of course, we can/should have much more validations but let's skip it for
+    // simplicity
     private static void validateWithdrawInput(String accountNumber, Currency currency, BigDecimal amount) {
         if (accountNumber == null || accountNumber.isBlank()) {
             throw new InvalidWithdrawException("Account number is required");

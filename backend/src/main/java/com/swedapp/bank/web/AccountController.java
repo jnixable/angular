@@ -1,6 +1,5 @@
 package com.swedapp.bank.web;
 
-import com.swedapp.bank.domain.AccountBalance;
 import com.swedapp.bank.service.account.AccountService;
 import com.swedapp.bank.service.account.ExchangeService;
 import com.swedapp.bank.service.account.errors.*;
@@ -9,13 +8,10 @@ import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 import static com.swedapp.bank.domain.Currency.EUR;
-import static java.util.stream.Collectors.toList;
 
 @RestController
 @RequestMapping("/api/accounts")
@@ -33,15 +29,25 @@ public class AccountController {
     public List<AccountResponse> listAccounts(Authentication authentication) {
         var currentUserCode = authentication.getName();
         return accountService.listAccounts(currentUserCode).stream()
-                .collect(Collectors.groupingBy(AccountBalance::account, LinkedHashMap::new, toList()))
-                .entrySet().stream()
-                .map(entry -> new AccountResponse(
-                        entry.getKey().number(),
-                        entry.getKey().name(),
-                        entry.getValue().stream()
+                .map(account -> new AccountResponse(
+                        account.number(),
+                        account.name(),
+                        account.balances().stream()
                                 .map(balance -> new BalanceResponse(balance.currency(), balance.balance()))
                                 .toList()))
                 .toList();
+    }
+
+    @GetMapping("/{accountNumber}")
+    public AccountResponse account(@PathVariable String accountNumber, Authentication authentication) {
+        var currentUserCode = authentication.getName();
+        var view = accountService.getAccount(currentUserCode, accountNumber);
+        return new AccountResponse(
+                view.number(),
+                view.name(),
+                view.balances().stream()
+                        .map(balance -> new BalanceResponse(balance.currency(), balance.balance()))
+                        .toList());
     }
 
     @PostMapping("/deposit")
@@ -66,7 +72,8 @@ public class AccountController {
     public ExchangeResponse exchange(@RequestBody ExchangeRequest request, Authentication authentication) {
         var currentUserCode = authentication.getName();
         var result = exchangeService.exchange(
-                currentUserCode, request.accountNumber(), request.fromCurrency(), request.toCurrency(), request.amount());
+                currentUserCode, request.accountNumber(), request.fromCurrency(), request.toCurrency(),
+                request.amount());
         return new ExchangeResponse(
                 result.accountNumber(), result.fromCurrency(), result.fromBalance(),
                 result.toCurrency(), result.toBalance(),

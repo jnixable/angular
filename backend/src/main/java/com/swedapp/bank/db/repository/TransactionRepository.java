@@ -7,14 +7,21 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.time.Instant;
 import java.util.UUID;
 
 public interface TransactionRepository extends JpaRepository<TransactionEntity, UUID> {
 
     @Query("""
             SELECT t FROM TransactionEntity t
-            WHERE t.accountId = :accountId OR t.accountTo = :accountId
+            WHERE (t.accountId = :accountId OR t.accountTo = :accountId)
+              AND t.createdAt >= :from
+              AND t.createdAt < :to
             ORDER BY t.createdAt DESC
             """)
-    Page<TransactionEntity> findHistoryForAccount(@Param("accountId") Long accountId, Pageable pageable);
+    Page<TransactionEntity> findHistoryForAccount(
+            @Param("accountId") Long accountId,
+            @Param("from") Instant from,
+            @Param("to") Instant to,
+            Pageable pageable);
 }

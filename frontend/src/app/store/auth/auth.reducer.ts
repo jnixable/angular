@@ -38,6 +38,13 @@ export const authFeature = createFeature({
       loading: false,
     })),
     on(AuthActions.loginFailure, (state, { error }) => ({ ...state, error, loading: false })),
+    on(AuthActions.restoreSession, (state) => ({ ...state, error: null })),
+    on(AuthActions.restoreSessionSuccess, (state, { user, token }) => ({
+      ...state,
+      user,
+      token,
+      loading: false,
+    })),
     on(AuthActions.logout, () => EMPTY_STATE),
   ),
 });

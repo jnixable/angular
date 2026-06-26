@@ -1,0 +1,162 @@
+.tx-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.tx-filter {
+  display: flex;
+  align-items: flex-end;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+}
+
+.tx-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  font-size: 0.8rem;
+  color: var(--muted);
+
+  input {
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 0.4rem 0.6rem;
+    font: inherit;
+    color: inherit;
+    background: var(--bg, #fff);
+  }
+}
+
+.btn {
+  border: 1px solid var(--brand);
+  background: var(--brand);
+  color: #fff;
+  border-radius: 999px;
+  padding: 0.45rem 1.1rem;
+  font-weight: 600;
+  cursor: pointer;
+
+  &:hover {
+    filter: brightness(1.05);
+  }
+}
+
+.btn-ghost {
+  background: transparent;
+  color: var(--brand);
+
+  &:hover {
+    background: rgba(255, 95, 0, 0.08);
+    filter: none;
+  }
+}
+
+.btn-link {
+  border: none;
+  background: none;
+  color: var(--brand);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 0 0 0 0.5rem;
+  text-decoration: underline;
+}
+
+.tx-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.tx-link {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--border);
+  border-radius: 8px;
+  padding: 0.75rem 1rem;
+  text-decoration: none;
+  color: inherit;
+  transition: border-color 0.15s ease;
+
+  &:hover {
+    border-color: var(--brand);
+  }
+}
+
+.tx-row.credit .tx-link {
+  border-left-color: #1e8e3e;
+}
+
+.tx-row.debit .tx-link {
+  border-left-color: #c0392b;
+}
+
+.tx-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  min-width: 0;
+}
+
+.tx-type {
+  font-weight: 600;
+  font-size: 0.85rem;
+  letter-spacing: 0.03em;
+}
+
+.tx-date {
+  color: var(--muted);
+  font-size: 0.78rem;
+}
+
+.tx-counterparty {
+  color: var(--muted);
+  font-size: 0.78rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.tx-amounts {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.1rem;
+}
+
+.tx-amount {
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+
+  &.pos {
+    color: #1e8e3e;
+  }
+
+  &.neg {
+    color: #c0392b;
+  }
+}
+
+.state-note {
+  margin: 0.5rem 0;
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+.state-error {
+  color: #c0392b;
+}
+
+.tx-sentinel {
+  height: 1px;
+}

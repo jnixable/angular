@@ -1,9 +1,12 @@
 import { Currency } from './currency.model';
 
-export interface Account {
-  id: string;
-  name: string | null;
-  number: string;
+export interface AccountBalance {
   currency: Currency;
   balance: number;
+}
+
+export interface Account {
+  number: string;
+  name: string | null;
+  balances: AccountBalance[];
 }

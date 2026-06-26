@@ -1,0 +1,53 @@
+<section class="transaction-overview">
+  <a class="back-link" [routerLink]="['/accounts', accountNumber]">← Back to account</a>
+
+  @if (view(); as v) {
+    <header class="tx-header">
+      <div>
+        <h2 class="tx-title">{{ v.type }}</h2>
+        <p
+          class="tx-direction"
+          [class.credit]="v.direction === 'CREDIT'"
+          [class.debit]="v.direction === 'DEBIT'"
+        >
+          {{ v.direction }}
+        </p>
+      </div>
+      <button type="button" class="btn" (click)="exportPdf()">Download PDF</button>
+    </header>
+
+    <dl class="tx-details">
+      <dt>Transaction ID</dt>
+      <dd class="mono">{{ v.id }}</dd>
+
+      <dt>Date</dt>
+      <dd>{{ v.createdAt | date: 'medium' }}</dd>
+
+      <dt>Account</dt>
+      <dd class="mono">{{ accountNumber }}</dd>
+
+      @if (v.amountIn != null) {
+        <dt>Amount in</dt>
+        <dd class="credit">+{{ v.amountIn | currency: (v.currencyIn ?? 'EUR') }}</dd>
+      }
+      @if (v.amountOut != null) {
+        <dt>Amount out</dt>
+        <dd class="debit">-{{ v.amountOut | currency: (v.currencyOut ?? 'EUR') }}</dd>
+      }
+      @if (v.accountFrom) {
+        <dt>From account</dt>
+        <dd class="mono">{{ v.accountFrom }}</dd>
+      }
+      @if (v.accountTo) {
+        <dt>To account</dt>
+        <dd class="mono">{{ v.accountTo }}</dd>
+      }
+    </dl>
+  } @else if (loading()) {
+    <p class="state-note">Loading transaction…</p>
+  } @else if (error()) {
+    <p class="state-note state-error">{{ error() }}</p>
+  } @else {
+    <p class="state-note">Transaction not found.</p>
+  }
+</section>

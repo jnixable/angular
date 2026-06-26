@@ -22,6 +22,10 @@ export class App {
     return current ? userDisplayName(current) : '';
   });
 
+  constructor() {
+    this.store.dispatch(AuthActions.restoreSession());
+  }
+
   protected logout(): void {
     this.store.dispatch(AuthActions.logout());
   }

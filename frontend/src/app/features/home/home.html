@@ -1,19 +1,31 @@
 <section class="home">
-
   <h2 class="section-title">Your accounts</h2>
 
-  <ul class="accounts">
-    @for (account of accounts; track account.id) {
-      <li class="account">
-        <a class="account-link" [routerLink]="['/accounts', account.id]">
-          <span class="account-name">{{ account.name ?? account.number }}</span>
-          <span class="account-balance">{{ account.balance | currency: account.currency }}</span>
+  @if (loading() && accounts().length === 0) {
+    <p class="state-note">Loading accounts…</p>
+  } @else if (error()) {
+    <p class="state-note state-error">{{ error() }}</p>
+  } @else if (accounts().length === 0) {
+    <p class="state-note">You don't have any accounts yet.</p>
+  } @else {
+    <ul class="accounts">
+      @for (account of accounts(); track account.number) {
+        <li class="account">
+          <a class="account-link" [routerLink]="['/accounts', account.number]">
+          <span class="account-info">
+            <span class="account-name">{{ account.name ?? account.number }}</span>
+            <span class="account-number">{{ account.number }}</span>
+          </span>
+          <span class="account-balances">
+            @for (balance of account.balances; track balance.currency) {
+              <span class="balance">{{ balance.balance | currency: balance.currency }}</span>
+            } @empty {
+              <span class="balance muted">No balances</span>
+            }
+          </span>
         </a>
-      </li>
-    }
-  </ul>
-
-  <p class="placeholder-note">
-    Showing sample accounts — the accounts API is not implemented yet.
-  </p>
+        </li>
+      }
+    </ul>
+  }
 </section>

@@ -14,10 +14,16 @@ export const routes: Routes = [
     loadComponent: () => import('./features/home/home').then((m) => m.HomePage),
   },
   {
-    path: 'accounts/:accountId',
+    path: 'accounts/:accountNumber',
     canActivate: [authGuard],
     loadComponent: () =>
       import('./features/account/account-overview').then((m) => m.AccountOverviewPage),
+  },
+  {
+    path: 'accounts/:accountNumber/transactions/:transactionId',
+    canActivate: [authGuard],
+    loadComponent: () =>
+      import('./features/transaction/transaction-overview').then((m) => m.TransactionOverviewPage),
   },
   { path: '**', redirectTo: 'home' },
 ];

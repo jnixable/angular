@@ -1,0 +1,64 @@
+<div class="tx-panel">
+  <form class="tx-filter" (ngSubmit)="applyFilter()">
+    <label class="tx-field">
+      <span>From</span>
+      <input #fromInput type="date" [value]="fromDate()" (change)="fromDate.set(fromInput.value)" />
+    </label>
+    <label class="tx-field">
+      <span>To</span>
+      <input #toInput type="date" [value]="toDate()" (change)="toDate.set(toInput.value)" />
+    </label>
+    <button type="submit" class="btn">Apply</button>
+    <button type="button" class="btn btn-ghost" (click)="clearFilter()">Clear</button>
+  </form>
+
+  @if (rows().length > 0) {
+    <ul class="tx-list">
+      @for (row of rows(); track row.id) {
+        <li
+          class="tx-row"
+          [class.credit]="row.direction === 'CREDIT'"
+          [class.debit]="row.direction === 'DEBIT'"
+        >
+          <a class="tx-link" [routerLink]="['transactions', row.id]">
+            <span class="tx-meta">
+              <span class="tx-type">{{ row.type }}</span>
+              <span class="tx-date">{{ row.createdAt | date: 'medium' }}</span>
+              @if (row.counterparty) {
+                <span class="tx-counterparty">↔ {{ row.counterparty }}</span>
+              }
+            </span>
+            <span class="tx-amounts">
+              @for (leg of row.legs; track leg.currency + leg.sign) {
+                <span
+                  class="tx-amount"
+                  [class.pos]="leg.sign === '+'"
+                  [class.neg]="leg.sign === '-'"
+                >
+                  {{ leg.sign }}{{ leg.amount | currency: leg.currency }}
+                </span>
+              }
+            </span>
+          </a>
+        </li>
+      }
+    </ul>
+  }
+
+  @if (isEmpty()) {
+    <p class="state-note">No transactions for this range.</p>
+  }
+
+  @if (error()) {
+    <p class="state-note state-error">
+      {{ error() }}
+      <button type="button" class="btn-link" (click)="retry()">Retry</button>
+    </p>
+  }
+
+  @if (loading()) {
+    <p class="state-note">Loading…</p>
+  }
+
+  <div #sentinel class="tx-sentinel" aria-hidden="true"></div>
+</div>

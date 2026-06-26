@@ -2,7 +2,7 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { inject } from '@angular/core';
 import { Router } from '@angular/router';
 import { Actions, createEffect, ofType } from '@ngrx/effects';
-import { catchError, map, of, switchMap, tap } from 'rxjs';
+import { catchError, filter, map, of, switchMap, tap } from 'rxjs';
 
 import { AuthService } from '../../core/services/auth.service';
 import { AuthActions } from './auth.actions';
@@ -29,6 +29,22 @@ export const login$ = createEffect(
               .pipe(map((user) => AuthActions.loginSuccess({ user, token: res.token }))),
           ),
           catchError((error) => of(AuthActions.loginFailure({ error: describeError(error) }))),
+        ),
+      ),
+    ),
+  { functional: true },
+);
+
+export const restoreSession$ = createEffect(
+  (actions$ = inject(Actions), auth = inject(AuthService)) =>
+    actions$.pipe(
+      ofType(AuthActions.restoreSession),
+      map(() => localStorage.getItem(AUTH_TOKEN_KEY)),
+      filter((token): token is string => token !== null),
+      switchMap((token) =>
+        auth.whoami(token).pipe(
+          map((user) => AuthActions.restoreSessionSuccess({ user, token })),
+          catchError(() => of(AuthActions.logout())),
         ),
       ),
     ),

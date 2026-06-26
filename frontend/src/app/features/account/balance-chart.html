@@ -1,0 +1,23 @@
+<div class="balance-chart">
+  <h3 class="section-title">Balance — last 30 days</h3>
+
+  @if (error()) {
+    <p class="state-note state-error">{{ error() }}</p>
+  } @else if (loading() && !hasActivity()) {
+    <p class="state-note">Loading chart…</p>
+  } @else {
+    <div class="chart-wrap">
+      <canvas
+        baseChart
+        role="img"
+        aria-label="Account balance over the last 30 days, per currency"
+        [type]="'line'"
+        [data]="chartData()"
+        [options]="chartOptions"
+      ></canvas>
+    </div>
+    @if (!hasActivity()) {
+      <p class="state-note">No activity in the last 30 days — showing the current balance.</p>
+    }
+  }
+</div>

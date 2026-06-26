@@ -1,4 +1,28 @@
 <section class="account-overview">
-  <h2>Account {{ accountId }}</h2>
-  <p>Account overview placeholder.</p>
+  @if (account(); as acc) {
+    <header class="account-header">
+      <div class="account-titles">
+        <h2 class="account-title">{{ acc.name ?? acc.number }}</h2>
+        <p class="account-number">{{ acc.number }}</p>
+      </div>
+      <ul class="balances">
+        @for (balance of acc.balances; track balance.currency) {
+          <li class="balance">{{ balance.balance | currency: balance.currency }}</li>
+        } @empty {
+          <li class="balance muted">No balances</li>
+        }
+      </ul>
+    </header>
+
+    <app-balance-chart [account]="acc" />
+
+    <app-money-actions [account]="acc" />
+
+    <h3 class="section-title">Transactions</h3>
+    <app-transaction-list [accountNumber]="acc.number" />
+  } @else if (accountsLoading()) {
+    <p class="state-note">Loading account…</p>
+  } @else {
+    <p class="state-note">Account not found.</p>
+  }
 </section>
